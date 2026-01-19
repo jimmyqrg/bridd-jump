@@ -35,19 +35,19 @@ const baseVolumes = {
   secondJump: 0.7,
   triggerDrop: 0.6,
   land: 0.6,
-  die: 0.8,
+  die: 1,
   collectGem: 0.7,
   startChooseVersion: 0.6,
   applySave: 0.6,
-  menuClick: 0.5,
-  background: 0.5,
+  menuClick: 0.8,
+  background: 0.65,
   healCollect: 0.7,
   healthIncreaseCollect: 0.7,
   minusCollect: 0.7,
-  supportCollect: 0.7,
+  supportCollect: 0.65,
   speedUpCollect: 0.9,
   speedUp: 0.7,
-  speedUpLoop: 0.6
+  speedUpLoop: 0.7
 };
 
 
