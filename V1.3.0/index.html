@@ -1051,10 +1051,83 @@
 
   
   <script>
+    // Preload assets for offline use
+    const OFFLINE_CACHE_NAME = 'bridd-jump-v1.3.0';
+    const OFFLINE_ASSETS = [
+      '/V1.3.0/',
+      '/V1.3.0/index.html',
+      '/V1.3.0/game.js',
+      '/V1.3.0/settings.html',
+      '/V1.3.0/infinite-campus.ico',
+      '/manifest.json',
+      '/game-images/games/bridd-jump.png',
+      '/images/healer.png',
+      '/images/extremeHealer.png',
+      '/images/healthIncreaser.png',
+      '/images/shield.png',
+      '/images/minus.png',
+      '/images/speed%20up.png',
+      '/images/jumper.png',
+      '/sounds/first-jump.mp3',
+      '/sounds/second-jump.mp3',
+      '/sounds/trigger-drop.mp3',
+      '/sounds/land.mp3',
+      '/sounds/die.mp3',
+      '/sounds/collect-gem.mp3',
+      '/sounds/start-chooseversion.mp3',
+      '/sounds/apply-save.mp3',
+      '/sounds/menu-click.mp3',
+      '/sounds/background.mp3',
+      '/sounds/heal-ultra-heal.mp3',
+      '/sounds/healthIncreaser.mp3',
+      '/sounds/minus.mp3',
+      '/sounds/speed-up.mp3',
+      '/sounds/boost.mp3',
+      '/sounds/speed-up-music.mp3',
+      '/sounds/speed-up-music-loop.mp3'
+    ];
+
+    async function preloadAssets() {
+      // Warm Cache Storage
+      if('caches' in window) {
+        try {
+          const cache = await caches.open(OFFLINE_CACHE_NAME);
+          await cache.addAll(OFFLINE_ASSETS);
+        } catch (err) {
+          console.log('Offline cache preload failed:', err);
+        }
+      }
+
+      // Warm browser caches for images
+      for(const src of OFFLINE_ASSETS.filter(a => a.endsWith('.png'))) {
+        const img = new Image();
+        img.src = src;
+      }
+
+      // Warm audio buffers
+      const audioFiles = OFFLINE_ASSETS.filter(a => a.endsWith('.mp3'));
+      for(const src of audioFiles) {
+        const audio = new Audio();
+        audio.preload = 'auto';
+        audio.src = src;
+        audio.load();
+      }
+
+      // Warm code and HTML for offline read
+      const textFiles = OFFLINE_ASSETS.filter(a => a.endsWith('.js') || a.endsWith('.html'));
+      for(const src of textFiles) {
+        fetch(src).catch(() => {});
+      }
+    }
+
+    window.addEventListener('load', preloadAssets);
+  </script>
+
+  <script>
     // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
+        navigator.serviceWorker.register('/V1.3.0/sw.js', { scope: '/V1.3.0/' })
           .then((registration) => {
             console.log('Service Worker registered:', registration);
           })
