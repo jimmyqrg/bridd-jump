@@ -19,7 +19,8 @@ const sounds = {
   healCollect: new Audio('../sounds/heal-ultra-heal.mp3'),
   healthIncreaseCollect: new Audio('../sounds/healthIncreaser.mp3'),
   minusCollect: new Audio('../sounds/minus.mp3'),
-  speedUpCollect: new Audio('../sounds/speed-up.mp3'),
+  supportCollect: new Audio('../sounds/speed-up.mp3'),
+  speedUpCollect: new Audio('../sounds/boost.mp3'),
   speedUp: new Audio('../sounds/speed-up-music.mp3'),
   speedUpLoop: new Audio('../sounds/speed-up-music-loop.mp3')
 };
@@ -43,6 +44,7 @@ const baseVolumes = {
   healCollect: 0.7,
   healthIncreaseCollect: 0.7,
   minusCollect: 0.7,
+  supportCollect: 0.7,
   speedUpCollect: 0.7,
   speedUp: 0.7,
   speedUpLoop: 0.6
@@ -81,6 +83,7 @@ function updateSoundVolumes() {
   if(sounds.healCollect) sounds.healCollect.volume = baseVolumes.healCollect * masterMul * soundEffectsMul;
   if(sounds.healthIncreaseCollect) sounds.healthIncreaseCollect.volume = baseVolumes.healthIncreaseCollect * masterMul * soundEffectsMul;
   if(sounds.minusCollect) sounds.minusCollect.volume = baseVolumes.minusCollect * masterMul * soundEffectsMul;
+  if(sounds.supportCollect) sounds.supportCollect.volume = baseVolumes.supportCollect * masterMul * soundEffectsMul;
   if(sounds.speedUpCollect) sounds.speedUpCollect.volume = baseVolumes.speedUpCollect * masterMul * soundEffectsMul;
   if(sounds.speedUp) sounds.speedUp.volume = baseVolumes.speedUp * masterMul * soundEffectsMul;
   if(sounds.speedUpLoop) sounds.speedUpLoop.volume = baseVolumes.speedUpLoop * masterMul * musicMul;
@@ -3730,8 +3733,10 @@ function gameTick() {
     for(let b of bobbles){
       if(!b.collected && player.x + player.width > b.x && player.x < b.x + b.size && player.y + player.height > b.y && player.y < b.y + b.size){
         b.collected = true;
-        if(b.type === 'speedUp' || b.type === 'jumper' || b.type === 'shield') {
-          playSoundWithMul('speedUpCollect', 0.55);
+        if(b.type === 'jumper' || b.type === 'shield') {
+          playSoundWithMul('supportCollect', 0.55);
+        } else if(b.type === 'speedUp') {
+           playSoundWithMul('speedUpCollect', 0.)
         } else if(b.type === 'healthIncreaser') {
           playSoundWithMul('healthIncreaseCollect', 1);
         } else if(b.type === 'minus') {
