@@ -388,7 +388,7 @@
       
       <label for="musicVolume">Music Volume:</label>
       <input type="range" id="musicVolume" min="0" max="100" value="50" step="1">
-      <div class="range-value" id="musicVolumeValue">50%</div>
+      <div class="range-value" id="musicVolumeValue">70%</div>
       
       <label for="soundEffectsVolume">Sound Effects Volume:</label>
       <input type="range" id="soundEffectsVolume" min="0" max="100" value="100" step="1">
@@ -694,18 +694,21 @@
         
         // Set volume settings
         if (settings.volume) {
-          document.getElementById("masterVolume").value = settings.volume.master || 100;
-          document.getElementById("masterVolumeValue").textContent = (settings.volume.master || 100) + "%";
-          document.getElementById("musicVolume").value = settings.volume.music || 50;
-          document.getElementById("musicVolumeValue").textContent = (settings.volume.music || 50) + "%";
-          document.getElementById("soundEffectsVolume").value = settings.volume.soundEffects || 100;
-          document.getElementById("soundEffectsVolumeValue").textContent = (settings.volume.soundEffects || 100) + "%";
+          const masterVol = settings.volume.master !== undefined ? settings.volume.master : 100;
+          const musicVol = settings.volume.music !== undefined ? settings.volume.music : 50;
+          const sfxVol = settings.volume.soundEffects !== undefined ? settings.volume.soundEffects : 100;
+          document.getElementById("masterVolume").value = masterVol;
+          document.getElementById("masterVolumeValue").textContent = masterVol + "%";
+          document.getElementById("musicVolume").value = musicVol;
+          document.getElementById("musicVolumeValue").textContent = musicVol + "%";
+          document.getElementById("soundEffectsVolume").value = sfxVol;
+          document.getElementById("soundEffectsVolumeValue").textContent = sfxVol + "%";
         } else {
           // Default values if volume settings don't exist
           document.getElementById("masterVolume").value = 100;
           document.getElementById("masterVolumeValue").textContent = "100%";
           document.getElementById("musicVolume").value = 50;
-          document.getElementById("musicVolumeValue").textContent = "50%";
+          document.getElementById("musicVolumeValue").textContent = "70%";
           document.getElementById("soundEffectsVolume").value = 100;
           document.getElementById("soundEffectsVolumeValue").textContent = "100%";
         }
@@ -932,7 +935,7 @@
         advanced: {
           shockwaves: 0, screenShake: 0, bloomParticles: 0, 
           particleTrails: 0, screenDistortion: 0,
-          particleCount: 10, trailLength: 10, screenReflections: 0,
+          particleCount: 0, trailLength: 0, screenReflections: 0,
           lightRays: 0, parallaxLayers: 0,
           velocityStreaks: 0, windParticles: 0, speedLines: 0,
           radialBlur: 0, platformPulse: 0, impactWaves: 0,
@@ -1172,20 +1175,20 @@
           horizontalLines: 200, trail: 100, glow: 200
         },
         advanced: {
-          shockwaves: 200, screenShake: 200, bloomParticles: 200, 
+          shockwaves: 200, screenShake: 400, bloomParticles: 200, 
           particleTrails: 200, screenDistortion: 200,
-          particleCount: 500, trailLength: 500, screenReflections: 200,
-          lightRays: 200, parallaxLayers: 250,
-          velocityStreaks: 250, windParticles: 250, speedLines: 250,
-          radialBlur: 200, platformPulse: 250, impactWaves: 250,
-          colorBleed: 200, depthOfField: 250, timeDilation: 200,
+          particleCount: 200, trailLength: 200, screenReflections: 200,
+          lightRays: 200, parallaxLayers: 200,
+          velocityStreaks: 200, windParticles: 200, speedLines: 200,
+          radialBlur: 200, platformPulse: 200, impactWaves: 200,
+          colorBleed: 200, depthOfField: 200, timeDilation: 200,
           lensFlare: 200, screenTear: 200, dynamicFog: 200,
           heatDistortion: 200, starbursts: 200, afterImages: 200,
           gravityWaves: 200, energyRipples: 200, pixelDisplacement: 200,
           ambientOcclusion: 200,
-          starRush: 250, nebulaDust: 225, warpTunnel: 225, boostFlash: 225,
-          contrailJets: 250, edgeLightning: 225, compressionRings: 225,
-          deathImplode: 225, deathGlitch: 225, deathVaporize: 225, respawnEffect: 225, shieldBreakParticles: 225, shieldBreakBurst: 225
+          starRush: 250, nebulaDust: 250, warpTunnel: 250, boostFlash: 250,
+          contrailJets: 250, edgeLightning: 250, compressionRings: 250,
+          deathImplode: 250, deathGlitch: 250, deathVaporize: 250, respawnEffect: 250, shieldBreakParticles: 250, shieldBreakBurst: 250
         }
       }
     };
@@ -1328,14 +1331,17 @@
 
     // Save settings and go back to game
     document.getElementById("saveBtn").addEventListener("click", function() {
+      const masterVol = parseInt(document.getElementById("masterVolume").value);
+      const musicVol = parseInt(document.getElementById("musicVolume").value);
+      const sfxVol = parseInt(document.getElementById("soundEffectsVolume").value);
       const settings = {
         maxFPS: parseInt(document.getElementById("fps").value) || 0,
         qualityPreset: document.getElementById("quality").value === "Custom" ? "Extreme+" : document.getElementById("quality").value,
         showKeyboard: document.getElementById("showKeyboard") ? document.getElementById("showKeyboard").checked : true,
         volume: {
-          master: parseInt(document.getElementById("masterVolume").value) || 100,
-          music: parseInt(document.getElementById("musicVolume").value) || 50,
-          soundEffects: parseInt(document.getElementById("soundEffectsVolume").value) || 100
+          master: Number.isFinite(masterVol) ? masterVol : 100,
+          music: Number.isFinite(musicVol) ? musicVol : 50,
+          soundEffects: Number.isFinite(sfxVol) ? sfxVol : 100
         },
         quality: {
           blockTexture: document.getElementById("blockTexture").checked ? 100 : 0,
@@ -1407,10 +1413,11 @@
         const saveSound = new Audio('../sounds/apply-save.mp3');
         saveSound.volume = 0.6;
         saveSound.play().catch(err => console.log('Sound play prevented:', err));
-        // Go back to the game
-        setTimeout(() => {
-          window.location.href = "index.html";
-        }, 100); // Small delay to let sound play
+        // Go back to the game after the sound finishes (or fallback if it can't play)
+        const goBack = () => { window.location.href = "index.html"; };
+        saveSound.addEventListener('ended', goBack, { once: true });
+        saveSound.addEventListener('error', goBack, { once: true });
+        setTimeout(goBack, 2000);
       } catch (e) {
         console.error("Failed to save settings:", e);
         alert("Failed to save settings!");

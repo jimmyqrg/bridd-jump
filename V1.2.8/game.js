@@ -85,7 +85,7 @@ function updateSoundVolumes() {
   if(sounds.minusCollect) sounds.minusCollect.volume = baseVolumes.minusCollect * masterMul * soundEffectsMul;
   if(sounds.supportCollect) sounds.supportCollect.volume = baseVolumes.supportCollect * masterMul * soundEffectsMul;
   if(sounds.speedUpCollect) sounds.speedUpCollect.volume = baseVolumes.speedUpCollect * masterMul * soundEffectsMul;
-  if(sounds.speedUp) sounds.speedUp.volume = baseVolumes.speedUp * masterMul * soundEffectsMul;
+  if(sounds.speedUp) sounds.speedUp.volume = baseVolumes.speedUp * masterMul * musicMul;
   if(sounds.speedUpLoop) sounds.speedUpLoop.volume = baseVolumes.speedUpLoop * masterMul * musicMul;
 }
 
@@ -125,6 +125,10 @@ function playSound(soundName) {
   try {
     const sound = sounds[soundName];
     if(sound) {
+      if(soundName === 'background') {
+        stopSound('speedUp');
+        stopSound('speedUpLoop');
+      }
       // Slight pitch variation for sound effects (keep music steady)
       const isMusic = soundName === 'background' || soundName === 'speedUp' || soundName === 'speedUpLoop';
       if(!isMusic) {
@@ -3363,6 +3367,7 @@ function playSpeedLockedSound() {
   if(!soundEnabled) return;
   updateSoundVolumes();
   if(sounds.speedUp) {
+    stopSound('background');
     sounds.speedUp.pause();
     sounds.speedUp.currentTime = 0;
     sounds.speedUp.loop = false;

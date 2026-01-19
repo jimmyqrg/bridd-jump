@@ -404,6 +404,22 @@
     left: 0;
     color: var(--accent);
   }
+
+  #howToPlayModal .bobble-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 16px;
+  }
+  #howToPlayModal .bobble-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  #howToPlayModal .bobble-item img {
+    width: 24px;
+    height: 24px;
+    image-rendering: pixelated;
+  }
   
   #howToPlayModal .closeBtn {
     margin-top: 8px;
@@ -892,6 +908,21 @@
           <li><strong>Drop:</strong> Press S or Arrow Down to drop quickly through platforms</li>
           <li><strong>Mobile Drop:</strong> Tap and drag down to drop</li>
         </ul>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">BOBBLES</div>
+      <div class="section-content">
+        <div class="bobble-grid">
+          <div class="bobble-item"><img src="../images/healer.png" alt="Healer">Healer: restore 1 HP</div>
+          <div class="bobble-item"><img src="../images/extremeHealer.png" alt="Extreme Healer">Extreme Healer: full heal</div>
+          <div class="bobble-item"><img src="../images/healthIncreaser.png" alt="Health Increaser">Health Increaser: +1 max HP</div>
+          <div class="bobble-item"><img src="../images/shield.png" alt="Shield">Shield: blocks next spike hit</div>
+          <div class="bobble-item"><img src="../images/jumper.png" alt="Jumper">Jumper: temporary infinite jump</div>
+          <div class="bobble-item"><img src="../images/speed%20up.png" alt="Speed Up">Speed Up: +speed</div>
+          <div class="bobble-item"><img src="../images/minus.png" alt="Minus">Minus: reduce score</div>
+        </div>
       </div>
     </div>
     

@@ -4,4 +4,8 @@
 <p>Updates:</p>
 <ol>
     <li>Update minus bobble</li>
+    <li>Play apply-save.mp3</li>
+    <li>Fix music volume settings</li>
+    <li>Update how to play</li>
+    <li>Fix settings UI</li>
 </ol>
