@@ -803,6 +803,57 @@
       gap: 15px;
     }
   }
+
+  /* Code Viewer */
+  #codeViewerModal {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 1500;
+    display: none;
+    flex-direction: column;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  #codeViewerContainer {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--panel);
+    border: 4px solid var(--accent);
+    box-shadow: 0 0 30px var(--accent-glow);
+  }
+  #codeViewerHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 3px solid var(--accent);
+  }
+  #codeViewerHeader h2 {
+    margin: 0;
+    font-size: 18px;
+  }
+  #codeViewer {
+    flex: 1;
+    width: 100%;
+    background: #000;
+    color: var(--accent);
+    border: none;
+    outline: none;
+    resize: none;
+    padding: 12px;
+    font-family: "Press Start 2P", monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    overflow: auto;
+  }
+
 </style>
 </head>
 <body>
@@ -815,7 +866,7 @@
     <button id="settingsBtn" class="btn">SETTINGS</button>
     <button id="fullscreenBtn" class="btn">FULLSCREEN</button>
     <button id="howToPlayBtn" class="btn">HOW TO PLAY</button>
-    <!-- <button onclick="if(typeof playSound === 'function') playSound('menuClick'); openCodeEditor();" class="btn">CODE</button> -->
+        <button onclick="if(typeof playSound === 'function') playSound('menuClick'); openCodeViewer();" class="btn">CODE</button>
     <button onclick="if(typeof playSound === 'function') playSound('menuClick'); window.location.href='../';" class="btn">HOME</button>
   </div>
 
@@ -929,7 +980,40 @@
   </div>
 
   <!-- <script src="../editCode.js"></script> -->
+  
+  <div id="codeViewerModal">
+    <div id="codeViewerContainer">
+      <div id="codeViewerHeader">
+        <h2>CODE VIEWER</h2>
+        <button id="closeCodeViewer" class="btn">CLOSE</button>
+      </div>
+      <textarea id="codeViewer" spellcheck="false" readonly></textarea>
+    </div>
+  </div>
+
   <script src="game.js"></script>
+  <script>
+    function openCodeViewer(){
+      const modal = document.getElementById('codeViewerModal');
+      const viewer = document.getElementById('codeViewer');
+      if(!modal || !viewer) return;
+      modal.style.display = 'flex';
+      viewer.value = 'Loading...';
+      fetch('game.js').then(r => r.text()).then(t => {
+        viewer.value = t;
+        viewer.scrollTop = 0;
+      }).catch(() => {
+        viewer.value = 'Failed to load code.';
+      });
+    }
+    const closeBtn = document.getElementById('closeCodeViewer');
+    if(closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        document.getElementById('codeViewerModal').style.display = 'none';
+      });
+    }
+  </script>
+
   
   <script>
     // Register Service Worker for PWA
