@@ -371,7 +371,17 @@
       background: rgba(255, 0, 0, 0.1);
       border-left: 3px solid #ff0000;
     }
-  </style>
+  
+  /* Mobile friendly */
+  @media (max-width: 560px) {
+    body { padding: 10px; }
+    .container { width: 92vw; max-width: none; padding: 20px; max-height: 92vh; }
+    h1 { font-size: 18px; }
+    label { font-size: 9px; }
+    select, input[type=range], button { font-size: 10px; }
+  }
+
+</style>
 </head>
 <body>
   <div class="container">

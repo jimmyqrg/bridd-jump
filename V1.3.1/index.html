@@ -35,7 +35,7 @@
     if (icon) icon.href = 'infinite-campus.ico';
   } else {
     // Set Bridd Jump branding
-    document.title = 'V1.2.0 | Bridd Jump';
+    document.title = 'V1.3.1 | Bridd Jump';
     let icon = document.querySelector('link[rel="icon"]');
     if (!icon) {
       icon = document.createElement('link');
@@ -129,10 +129,6 @@
     margin: 0; 
     font-size: 28px; 
     color: var(--accent);
-    text-shadow: 
-      0 0 10px var(--accent-glow),
-      0 0 20px var(--accent-glow),
-      0 0 30px var(--accent-glow);
     text-align: center;
     line-height: 1.4;
     letter-spacing: 2px;
@@ -142,7 +138,6 @@
     font-size: 11px; 
     color: var(--muted);
     margin-top: 4px;
-    text-shadow: 0 0 5px rgba(136, 247, 255, 0.5);
   }
   
   .btn {
@@ -193,30 +188,68 @@
     box-shadow: 0 0 5px var(--accent-glow);
   }
   
-  #scoreHUD { 
-    position: fixed; 
-    left: 16px; 
-    top: 16px; 
-    z-index: 1100; 
-    font-size: 12px; 
-    color: var(--accent);
-    text-shadow: 
-      0 0 8px var(--accent-glow),
-      0 0 16px rgba(0, 255, 255, 0.4);
+  #hpDisplay {
+    position: fixed;
+    left: 16px;
+    top: 16px;
+    z-index: 1100;
+    display: flex;
+    gap: 4px;
     pointer-events: none;
-    font-family: "Press Start 2P", monospace;
+  }
+  
+  .hpSquare {
+    width: 30px;
+    height: 30px;
+    border: 3px solid var(--accent);
+    box-shadow: 0 0 8px var(--accent-glow);
+  }
+  
+  .hpSquare.full {
+    background-color: var(--accent);
+  }
+  
+  .hpSquare.empty {
+    background-color: #000;
   }
   
   #fpsLabel { 
     position: fixed; 
-    left: 16px; 
-    top: 40px; 
+    right: 16px; 
+    top: 16px; 
     z-index: 1100; 
-    font-size: 10px; 
+    font-size: 14px; 
     color: var(--muted);
-    text-shadow: 0 0 5px rgba(136, 247, 255, 0.3);
     pointer-events: none;
     font-family: "Press Start 2P", monospace;
+    padding: 12px 18px;
+    background: rgba(0, 0, 0, 0.6);
+  }
+  
+  #scoreDisplay {
+    margin-top: 32px;
+    position: fixed;
+    left: 50%;
+    top: 16px;
+    transform: translateX(-50%);
+    z-index: 1100;
+    font-size: 48px;
+    color: var(--accent);
+    pointer-events: none;
+    font-family: "Press Start 2P", monospace;
+  }
+  
+  #pauseTimer {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1200;
+    font-size: 72px;
+    color: var(--accent);
+    font-family: "Press Start 2P", monospace;
+    display: none;
+    pointer-events: none;
   }
   
   #debugToast { 
@@ -226,17 +259,17 @@
     bottom: 24px; 
     z-index: 1300; 
     background: var(--panel);
-    border: 2px solid var(--accent);
+    border: 3px solid var(--accent);
     color: var(--accent);
-    padding: 10px 16px;
+    padding: 15px 24px;
     border-radius: 0;
     display: none;
-    font-size: 10px;
+    font-size: 14px;
     font-family: "Press Start 2P", monospace;
     pointer-events: none;
     box-shadow: 
-      0 0 15px var(--accent-glow),
-      inset 0 0 10px rgba(0, 255, 255, 0.1);
+      0 0 20px var(--accent-glow),
+      inset 0 0 15px rgba(0, 255, 255, 0.1);
     animation: toastSlideUp 0.3s ease-out;
     text-transform: uppercase;
   }
@@ -266,12 +299,57 @@
     opacity: 0;
   }
   
+  /* Keyboard visualization blocks */
+  #keyboardVisualization {
+    position: fixed;
+    left: 20px;
+    bottom: 20px;
+    z-index: 1100;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+  }
+  
+  .keyboardKey {
+    width: 48px;
+    height: 48px;
+    background: #000;
+    border: 2px solid #fff;
+    opacity: 0.5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.1s ease;
+  }
+  
+  .keyboardKey.active {
+    opacity: 1;
+  }
+  
+  .keyboardKey svg {
+    width: 24px;
+    height: 24px;
+    fill: #fff;
+  }
+  
   /* How to Play Modal */
   #howToPlayModal {
     position: fixed;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1400;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  #howToPlayModal.show {
+    display: flex;
+  }
+  
+  #howToPlayContent {
+    position: relative;
     width: 600px;
     max-width: 90vw;
     max-height: 80vh;
@@ -282,86 +360,117 @@
     box-shadow: 
       0 0 30px var(--accent-glow),
       inset 0 0 30px rgba(0, 255, 255, 0.1);
-    z-index: 1400;
-    display: none;
+    display: flex;
     flex-direction: column;
     gap: 20px;
     overflow-y: auto;
     animation: menuFadeIn 0.4s ease-out;
   }
   
-  #howToPlayModal.show {
-    display: flex;
-  }
-  
-  #howToPlayModal h2 {
+  #howToPlayContent h2 {
     font-size: 18px;
     color: var(--accent);
-    text-shadow: 
-      0 0 10px var(--accent-glow),
-      0 0 20px var(--accent-glow);
     text-align: center;
     margin-bottom: 8px;
   }
   
-  #howToPlayModal .section {
+  #howToPlayContent .section {
     margin-bottom: 16px;
   }
   
-  #howToPlayModal .section-title {
+  #howToPlayContent .section-title {
     font-size: 12px;
     color: var(--accent);
-    text-shadow: 0 0 5px var(--accent-glow);
     margin-bottom: 8px;
     text-decoration: underline;
   }
   
-  #howToPlayModal .section-content {
+  #howToPlayContent .section-content {
     font-size: 9px;
     color: var(--muted);
     line-height: 1.6;
     margin-left: 8px;
   }
   
-  #howToPlayModal .section-content ul {
+  #howToPlayContent .section-content ul {
     list-style: none;
     padding-left: 0;
     margin: 4px 0;
   }
   
-  #howToPlayModal .section-content li {
+  #howToPlayContent .section-content li {
     margin: 4px 0;
     padding-left: 16px;
     position: relative;
   }
   
-  #howToPlayModal .section-content li::before {
+  #howToPlayContent .section-content li::before {
     content: '•';
     position: absolute;
     left: 0;
     color: var(--accent);
   }
+
+  #howToPlayContent .bobble-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 16px;
+  }
+  #howToPlayContent .bobble-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  #howToPlayContent .bobble-item img {
+    width: 24px;
+    height: 24px;
+    image-rendering: pixelated;
+  }
   
-  #howToPlayModal .closeBtn {
+  #howToPlayContent .closeBtn {
     margin-top: 8px;
     align-self: center;
   }
   
-  #howToPlayModal::-webkit-scrollbar {
+  #howToPlayContent::-webkit-scrollbar {
     width: 8px;
   }
   
-  #howToPlayModal::-webkit-scrollbar-track {
+  #howToPlayContent::-webkit-scrollbar-track {
     background: rgba(0, 255, 255, 0.1);
   }
   
-  #howToPlayModal::-webkit-scrollbar-thumb {
+  #howToPlayContent::-webkit-scrollbar-thumb {
     background: var(--accent);
     border: 2px solid #000;
   }
+
+  #howToPlayCloseX {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 34px;
+    height: 34px;
+    border: 3px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    font-family: "Press Start 2P", monospace;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+  }
+  
+  #howToPlayCloseX:hover {
+    color: #000;
+    background: var(--accent);
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
   
   /* Code Editor Modal */
-  #codeEditorModal {
+  /* #codeEditorModal {
     position: fixed;
     left: 0;
     top: 0;
@@ -398,7 +507,6 @@
   #codeEditorHeader h2 {
     font-size: 14px;
     color: var(--accent);
-    text-shadow: 0 0 10px var(--accent-glow);
     margin: 0;
   }
   
@@ -441,7 +549,6 @@
     font-size: 11px;
     color: var(--accent);
     margin: 0 0 8px 0;
-    text-shadow: 0 0 5px var(--accent-glow);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -563,8 +670,135 @@
   
   #codeEditor::-webkit-scrollbar-thumb:hover {
     background: var(--muted);
-  }
+  } */
   
+  /* Pause Screen */
+  #pauseScreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+  }
+
+  #pauseScreen.show {
+    display: flex;
+  }
+
+  .pauseBtn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-family: "Press Start 2P", monospace;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 20px 40px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: all 0.2s ease;
+  }
+
+  .pauseBtn:hover {
+    color: var(--muted);
+    transform: scale(1.1);
+  }
+
+  .pauseBtn:active {
+    transform: scale(0.95);
+  }
+
+  /* Best Score Modal */
+  #bestScoreModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 3000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #bestScoreModal.show {
+    display: flex;
+  }
+
+  .bestScoreModalContent {
+    background: var(--panel);
+    border: 4px solid var(--accent);
+    padding: 40px;
+    text-align: center;
+    box-shadow: 
+      0 0 30px var(--accent-glow),
+      inset 0 0 30px rgba(0, 255, 255, 0.1);
+    max-width: 500px;
+    width: 90%;
+  }
+
+  .bestScoreTitle {
+    font-family: "Press Start 2P", monospace;
+    font-size: 24px;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+
+  .bestScoreValue {
+    font-family: "Press Start 2P", monospace;
+    font-size: 48px;
+    color: var(--accent);
+    margin-bottom: 30px;
+  }
+
+  .bestScoreQuestion {
+    font-family: "Press Start 2P", monospace;
+    font-size: 14px;
+    color: var(--accent);
+    margin-bottom: 30px;
+    line-height: 1.6;
+  }
+
+  .bestScoreButtons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+  }
+
+  .bestScoreBtn {
+    background: none;
+    border: 3px solid var(--accent);
+    color: var(--accent);
+    font-family: "Press Start 2P", monospace;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 16px 32px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: all 0.2s ease;
+    min-width: 150px;
+  }
+
+  .bestScoreBtn:hover {
+    background: var(--accent);
+    color: #000;
+    box-shadow: 
+      0 0 20px var(--accent-glow),
+      inset 0 0 20px rgba(0, 255, 255, 0.2);
+    transform: scale(1.05);
+  }
+
+  .bestScoreBtn:active {
+    transform: scale(0.95);
+  }
+
   @media (max-width: 560px) {
     #menu { 
       width: 92vw; 
@@ -579,13 +813,29 @@
     #menu h1 { 
       font-size: 22px; 
     }
-    #scoreHUD, #fpsLabel {
+    #hpDisplay {
       left: 12px;
-      font-size: 10px;
+      top: 12px;
+    }
+    .hpSquare {
+      width: 24px;
+      height: 24px;
+    }
+    #scoreDisplay {
+      font-size: 24px;
     }
     #fpsLabel {
-      top: 36px;
-      font-size: 9px;
+      right: 12px;
+      top: 12px;
+      font-size: 12px;
+      padding: 10px 14px;
+    }
+    #pauseTimer {
+      font-size: 54px;
+    }
+    .pauseBtn {
+      font-size: 16px;
+      padding: 16px 32px;
     }
     #codeEditorModal {
       padding: 10px;
@@ -595,6 +845,10 @@
       position: relative;
       border-left: none;
       border-bottom: 2px solid var(--accent);
+    }
+    .pauseBtn {
+      font-size: 12px;
+      padding: 12px 24px;
     }
   }
 
@@ -648,6 +902,73 @@
     overflow: auto;
   }
 
+  /* Keyboard settings (desktop only) */
+  #keyboardSettings {
+    display: none;
+    width: 100%;
+    margin-top: 8px;
+    border-top: 2px solid rgba(0, 255, 255, 0.3);
+    padding-top: 12px;
+    gap: 10px;
+    flex-direction: column;
+  }
+
+  #keyboardSettingsTitle {
+    font-size: 10px;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .keyBox {
+    border: 3px solid var(--accent);
+    padding: 10px;
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.4);
+  }
+
+  .keyBoxLabel {
+    font-size: 10px;
+    color: var(--accent);
+    text-align: left;
+  }
+
+  .keyList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .keyBlock {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    font-size: 9px;
+    background: #000;
+  }
+
+  .keyBlockRemove {
+    cursor: pointer;
+    font-size: 10px;
+    color: #ff6666;
+  }
+
+  .keyAdd {
+    border-style: dashed;
+    cursor: pointer;
+  }
+
+  .keyAdd.recording {
+    color: #000;
+    background: var(--accent);
+  }
+
 
   /* Mobile friendly */
   @media (max-width: 560px) {
@@ -669,13 +990,27 @@
     <div id="bestScore">Best Score: 0</div>
     <button id="startBtn" class="btn">START</button>
     <button id="settingsBtn" class="btn">SETTINGS</button>
+    <button id="fullscreenBtn" class="btn">FULLSCREEN</button>
     <button id="howToPlayBtn" class="btn">HOW TO PLAY</button>
-    <button onclick="if(typeof playSound === 'function') playSound('menuClick'); openCodeViewer()" class="btn">CODE</button>
-    <button onclick="window.location.href='../'" class="btn">HOME</button>
+        <button onclick="if(typeof playSound === 'function') playSound('menuClick'); openCodeViewer();" class="btn">CODE</button>
+    <button onclick="if(typeof playSound === 'function') playSound('menuClick'); window.location.href='../';" class="btn">HOME</button>
+    <div id="keyboardSettings">
+      <div id="keyboardSettingsTitle">KEYBOARD SETTINGS</div>
+      <div class="keyBox">
+        <div class="keyBoxLabel">JUMP KEY</div>
+        <div class="keyList" id="jumpKeyList"></div>
+      </div>
+      <div class="keyBox">
+        <div class="keyBoxLabel">DROP KEY</div>
+        <div class="keyList" id="dropKeyList"></div>
+      </div>
+    </div>
   </div>
 
   <!-- How to Play Modal -->
   <div id="howToPlayModal">
+    <div id="howToPlayContent">
+    <button id="howToPlayCloseX" aria-label="Close">X</button>
     <h2>HOW TO PLAY</h2>
     
     <div class="section">
@@ -696,6 +1031,21 @@
         </ul>
       </div>
     </div>
+
+    <div class="section">
+      <div class="section-title">BOBBLES</div>
+      <div class="section-content">
+        <div class="bobble-grid">
+          <div class="bobble-item"><img src="../images/healer.png" alt="Healer">Healer: restore 1 HP</div>
+          <div class="bobble-item"><img src="../images/extremeHealer.png" alt="Extreme Healer">Extreme Healer: full heal</div>
+          <div class="bobble-item"><img src="../images/healthIncreaser.png" alt="Health Increaser">Health Increaser: +1 max HP</div>
+          <div class="bobble-item"><img src="../images/shield.png" alt="Shield">Shield: blocks next spike hit</div>
+          <div class="bobble-item"><img src="../images/jumper.png" alt="Jumper">Jumper: temporary infinite jump</div>
+          <div class="bobble-item"><img src="../images/speed%20up.png" alt="Speed Up">Speed Up: +speed</div>
+          <div class="bobble-item"><img src="../images/minus.png" alt="Minus">Minus: reduce score</div>
+        </div>
+      </div>
+    </div>
     
     <div class="section">
       <div class="section-title">GAME MECHANICS</div>
@@ -710,11 +1060,12 @@
       </div>
     </div>
     
-    <button class="btn closeBtn" onclick="document.getElementById('howToPlayModal').classList.remove('show')">CLOSE</button>
+    <button class="btn closeBtn" onclick="if(typeof playSound === 'function') playSound('menuClick'); closeHowToPlay();">CLOSE</button>
+    </div>
   </div>
 
   <!-- Code Editor Modal -->
-  <div id="codeEditorModal">
+  <!-- <div id="codeEditorModal">
     <div id="codeEditorContainer">
       <div id="codeEditorHeader">
         <h2>CODE EDITOR</h2>
@@ -743,13 +1094,50 @@
         <textarea id="codeEditor" spellcheck="false"></textarea>
       </div>
     </div>
-  </div>
+  </div> -->
 
-  <div id="scoreHUD">Score: 0</div>
+  <div id="hpDisplay"></div>
+  <div id="scoreDisplay">0</div>
   <div id="fpsLabel">FPS: -- / --</div>
+  <div id="pauseTimer">3</div>
   <div id="debugToast"></div>
   <div id="mobileCommandBtn" title="Open Command (Ctrl+Shift+A)"></div>
+  
+  <!-- Pause Screen -->
+  <div id="pauseScreen">
+    <button id="continueBtn" class="pauseBtn">CONTINUE</button>
+    <button id="mainMenuBtn" class="pauseBtn">MAIN MENU</button>
+  </div>
+  
+  <!-- Best Score Choice Modal -->
+  <div id="bestScoreModal">
+    <div class="bestScoreModalContent">
+      <div class="bestScoreTitle">New High Score!</div>
+      <div class="bestScoreValue" id="bestScoreValue">0</div>
+      <div class="bestScoreQuestion">Would you like to save this as your best score?</div>
+      <div class="bestScoreButtons">
+        <button id="keepBestScoreBtn" class="bestScoreBtn">KEEP</button>
+        <button id="dontKeepBestScoreBtn" class="bestScoreBtn">DON'T KEEP</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Keyboard Visualization -->
+  <div id="keyboardVisualization">
+    <div id="keyboardKeyUp" class="keyboardKey">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
+      </svg>
+    </div>
+    <div id="keyboardKeyDown" class="keyboardKey">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/>
+      </svg>
+    </div>
+  </div>
 
+  <!-- <script src="../editCode.js"></script> -->
+  
   <div id="codeViewerModal">
     <div id="codeViewerContainer">
       <div id="codeViewerHeader">
@@ -785,10 +1173,83 @@
 
   
   <script>
+    // Preload assets for offline use
+    const OFFLINE_CACHE_NAME = 'bridd-jump-v1.3.0';
+    const OFFLINE_ASSETS = [
+      '/V1.3.0/',
+      '/V1.3.0/index.html',
+      '/V1.3.0/game.js',
+      '/V1.3.0/settings.html',
+      '/V1.3.0/infinite-campus.ico',
+      '/manifest.json',
+      '/game-images/games/bridd-jump.png',
+      '/images/healer.png',
+      '/images/extremeHealer.png',
+      '/images/healthIncreaser.png',
+      '/images/shield.png',
+      '/images/minus.png',
+      '/images/speed%20up.png',
+      '/images/jumper.png',
+      '/sounds/first-jump.mp3',
+      '/sounds/second-jump.mp3',
+      '/sounds/trigger-drop.mp3',
+      '/sounds/land.mp3',
+      '/sounds/die.mp3',
+      '/sounds/collect-gem.mp3',
+      '/sounds/start-chooseversion.mp3',
+      '/sounds/apply-save.mp3',
+      '/sounds/menu-click.mp3',
+      '/sounds/background.mp3',
+      '/sounds/heal-ultra-heal.mp3',
+      '/sounds/healthIncreaser.mp3',
+      '/sounds/minus.mp3',
+      '/sounds/speed-up.mp3',
+      '/sounds/boost.mp3',
+      '/sounds/speed-up-music.mp3',
+      '/sounds/speed-up-music-loop.mp3'
+    ];
+
+    async function preloadAssets() {
+      // Warm Cache Storage
+      if('caches' in window) {
+        try {
+          const cache = await caches.open(OFFLINE_CACHE_NAME);
+          await cache.addAll(OFFLINE_ASSETS);
+        } catch (err) {
+          console.log('Offline cache preload failed:', err);
+        }
+      }
+
+      // Warm browser caches for images
+      for(const src of OFFLINE_ASSETS.filter(a => a.endsWith('.png'))) {
+        const img = new Image();
+        img.src = src;
+      }
+
+      // Warm audio buffers
+      const audioFiles = OFFLINE_ASSETS.filter(a => a.endsWith('.mp3'));
+      for(const src of audioFiles) {
+        const audio = new Audio();
+        audio.preload = 'auto';
+        audio.src = src;
+        audio.load();
+      }
+
+      // Warm code and HTML for offline read
+      const textFiles = OFFLINE_ASSETS.filter(a => a.endsWith('.js') || a.endsWith('.html'));
+      for(const src of textFiles) {
+        fetch(src).catch(() => {});
+      }
+    }
+
+    window.addEventListener('load', preloadAssets);
+  </script>
+
+  <script>
     // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
+        navigator.serviceWorker.register('/V1.3.0/sw.js', { scope: '/V1.3.0/' })
           .then((registration) => {
             console.log('Service Worker registered:', registration);
           })

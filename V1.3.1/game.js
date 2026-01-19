@@ -357,6 +357,7 @@ let bestScoreWinner = localStorage.getItem("bestScoreWinner") === "true";
 
 if(bestScore === 0) {
   const legacyKeys = [
+    "bestScoreV1.3.0",
     "bestScoreV1.2.8",
     "bestScoreV1.2.7",
     "bestScoreV1.2.6",
@@ -427,6 +428,10 @@ const defaultSettings = {
   maxFPS: 0,
   qualityPreset: "Extreme+",
   showKeyboard: true, // Show keyboard visualization (only if device has keyboard)
+  keybinds: {
+    jump: ["KeyW", "ArrowUp", "Space"],
+    drop: ["ArrowDown", "KeyS", "ShiftLeft", "ShiftRight"]
+  },
   quality: {
     jumpEffect: 64,
     walkEffect: 64,
@@ -626,6 +631,7 @@ function readSettings(){
     if(parsed.maxFPS !== undefined) merged.maxFPS = parsed.maxFPS;
     if(parsed.qualityPreset) merged.qualityPreset = parsed.qualityPreset;
     if(parsed.showKeyboard !== undefined) merged.showKeyboard = parsed.showKeyboard;
+    if(parsed.keybinds) merged.keybinds = {...merged.keybinds, ...parsed.keybinds};
     if(parsed.quality) merged.quality = {...merged.quality, ...parsed.quality};
     if(parsed.advanced) merged.advanced = {...merged.advanced, ...parsed.advanced};
     if(parsed.volume) merged.volume = parsed.volume;
@@ -2978,11 +2984,117 @@ let jumpKeyPressed = false;
 let dropKeyPressed = false;
 let mousePressed = false;
 let touchPressed = false;
+let keybindRecording = null;
+
+function normalizeKeyList(list) {
+  if(!Array.isArray(list)) return [];
+  const cleaned = list.filter(Boolean);
+  return Array.from(new Set(cleaned));
+}
+
+function getKeybindList(type) {
+  const binds = settings.keybinds || defaultSettings.keybinds;
+  const list = binds && binds[type] ? binds[type] : defaultSettings.keybinds[type];
+  return normalizeKeyList(list);
+}
+
+function setKeybindList(type, list) {
+  if(!settings.keybinds) settings.keybinds = JSON.parse(JSON.stringify(defaultSettings.keybinds));
+  settings.keybinds[type] = normalizeKeyList(list);
+  writeSettings(settings);
+}
+
+function keyToLabel(code) {
+  if(code.startsWith('Key')) return code.slice(3).toUpperCase();
+  if(code.startsWith('Digit')) return code.slice(5);
+  if(code.startsWith('Numpad')) return code.replace('Numpad', 'NUM ');
+  if(code.startsWith('Arrow')) return code.replace('Arrow', '').toUpperCase() + ' ARROW';
+  if(code === 'Space') return 'SPACE';
+  if(code === 'ShiftLeft' || code === 'ShiftRight') return 'SHIFT';
+  if(code === 'ControlLeft' || code === 'ControlRight') return 'CTRL';
+  if(code === 'AltLeft' || code === 'AltRight') return 'ALT';
+  if(code === 'MetaLeft' || code === 'MetaRight') return 'COMMAND';
+  if(code === 'Enter') return 'ENTER';
+  if(code === 'Backspace') return 'BACKSPACE';
+  if(code === 'Tab') return 'TAB';
+  if(code === 'Escape') return 'ESC';
+  if(code.startsWith('Mouse')) return code.replace('Mouse', 'MOUSE-');
+  return code.toUpperCase();
+}
+
+function renderKeybindsUI() {
+  const jumpListEl = document.getElementById('jumpKeyList');
+  const dropListEl = document.getElementById('dropKeyList');
+  if(!jumpListEl || !dropListEl) return;
+
+  const jumpKeys = getKeybindList('jump');
+  const dropKeys = getKeybindList('drop');
+
+  const renderList = (el, keys, type) => {
+    el.innerHTML = '';
+    for(const code of keys) {
+      const block = document.createElement('div');
+      block.className = 'keyBlock';
+      const label = document.createElement('span');
+      label.textContent = keyToLabel(code);
+      const remove = document.createElement('span');
+      remove.className = 'keyBlockRemove';
+      remove.textContent = 'x';
+      remove.addEventListener('click', () => {
+        const updated = getKeybindList(type).filter(k => k !== code);
+        setKeybindList(type, updated);
+        renderKeybindsUI();
+      });
+      block.appendChild(label);
+      block.appendChild(remove);
+      el.appendChild(block);
+    }
+
+    const addBlock = document.createElement('div');
+    addBlock.className = 'keyBlock keyAdd' + (keybindRecording === type ? ' recording' : '');
+    addBlock.textContent = keybindRecording === type ? 'PRESS KEY...' : 'ADD +';
+    addBlock.addEventListener('click', () => {
+      keybindRecording = type;
+      renderKeybindsUI();
+    });
+    el.appendChild(addBlock);
+  };
+
+  renderList(jumpListEl, jumpKeys, 'jump');
+  renderList(dropListEl, dropKeys, 'drop');
+}
+
+function cancelKeybindRecording() {
+  keybindRecording = null;
+  renderKeybindsUI();
+}
+
+function addKeybind(type, code) {
+  const otherType = type === 'jump' ? 'drop' : 'jump';
+  const updated = getKeybindList(type);
+  if(!updated.includes(code)) updated.push(code);
+  const other = getKeybindList(otherType).filter(k => k !== code);
+  setKeybindList(type, updated);
+  setKeybindList(otherType, other);
+  keybindRecording = null;
+  renderKeybindsUI();
+}
 
 window.addEventListener('keydown', e => {
+  if(keybindRecording) {
+    if(e.code === 'Escape') {
+      cancelKeybindRecording();
+      return;
+    }
+    e.preventDefault();
+    addKeybind(keybindRecording, e.code);
+    return;
+  }
   keys[e.code] = true;
-  const isJumpKey = ["KeyW","ArrowUp","Space"].includes(e.code);
-  const isDropKey = ["ArrowDown","KeyS"].includes(e.code);
+  const jumpKeys = getKeybindList('jump');
+  const dropKeys = getKeybindList('drop');
+  const isJumpKey = jumpKeys.includes(e.code);
+  const isDropKey = dropKeys.includes(e.code);
   if(!isJumpKey && !isDropKey) {
     playSound('menuClick');
   }
@@ -3007,13 +3119,13 @@ window.addEventListener('keydown', e => {
 });
 window.addEventListener('keyup', e => { 
   keys[e.code] = false;
-  if(["KeyW","ArrowUp","Space"].includes(e.code)) {
+  if(getKeybindList('jump').includes(e.code)) {
     jumpKeyPressed = false;
     // Update keyboard visualization
     const upKey = document.getElementById('keyboardKeyUp');
     if(upKey) upKey.classList.remove('active');
   }
-  if(["ArrowDown","KeyS"].includes(e.code)) {
+  if(getKeybindList('drop').includes(e.code)) {
     dropKeyPressed = false;
     stopDrop();
     // Update keyboard visualization
@@ -3021,10 +3133,24 @@ window.addEventListener('keyup', e => {
     if(downKey) downKey.classList.remove('active');
   }
 });
-window.addEventListener('mousedown', () => {
+window.addEventListener('mousedown', (e) => {
+  const mouseCode = `Mouse${e.button + 1}`;
+  if(keybindRecording) {
+    e.preventDefault();
+    addKeybind(keybindRecording, mouseCode);
+    return;
+  }
+  const jumpKeys = getKeybindList('jump');
+  const dropKeys = getKeybindList('drop');
   if(!mousePressed) {
     mousePressed = true;
-    jump();
+    if(dropKeys.includes(mouseCode)) {
+      drop();
+    } else if(jumpKeys.includes(mouseCode)) {
+      jump();
+    } else if(!hasKeyboard() && e.button === 0) {
+      jump();
+    }
   }
 });
 window.addEventListener('mouseup', () => {
@@ -5187,6 +5313,12 @@ document.getElementById('settingsBtn').addEventListener('click', () => {
   });
 });
 
+window.addEventListener('contextmenu', (e) => {
+  if(keybindRecording) {
+    e.preventDefault();
+  }
+});
+
 // Detect if device has keyboard
 function hasKeyboard() {
   // Check if device has keyboard by testing if it's not a touch-only device
@@ -5201,6 +5333,17 @@ function hasKeyboard() {
 // Initialize keyboard visualization
 function initKeyboardVisualization() {
   updateKeyboardVisualization();
+}
+
+function updateKeyboardSettingsVisibility() {
+  const container = document.getElementById('keyboardSettings');
+  if(!container) return;
+  container.style.display = hasKeyboard() ? 'flex' : 'none';
+}
+
+function initKeyboardSettings() {
+  renderKeybindsUI();
+  updateKeyboardSettingsVisibility();
 }
 
 // Update keyboard visualization visibility when settings change
@@ -5240,6 +5383,7 @@ stopSound('background');
 
 // Initialize keyboard visualization
 initKeyboardVisualization();
+initKeyboardSettings();
 
 // start the RAF loop
 requestAnimationFrame(mainLoop);
