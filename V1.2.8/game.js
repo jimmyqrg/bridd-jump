@@ -354,6 +354,28 @@ let shieldBreakBursts = []; // Burst effect for shield break
 /* gameplay */
 let keys = {}, score = 0, bestScore = localStorage.getItem("bestScore") ? parseInt(localStorage.getItem("bestScore")) : 0;
 let bestScoreWinner = localStorage.getItem("bestScoreWinner") === "true";
+
+if(bestScore === 0) {
+  const legacyKeys = [
+    "bestScoreV1.2.7",
+    "bestScoreV1.2.6",
+    "bestScoreV1.2.5",
+    "bestScoreV1.2.4",
+    "bestScoreV1.2.3",
+    "bestScoreV1.2.2",
+    "bestScoreV1.2.1",
+    "bestScoreV1.2.0"
+  ];
+  for(const key of legacyKeys) {
+    const raw = localStorage.getItem(key);
+    const val = raw !== null ? parseInt(raw) : 0;
+    if(Number.isFinite(val) && val > 0) {
+      bestScore = val;
+      localStorage.setItem("bestScore", bestScore);
+      break;
+    }
+  }
+}
 let gameRunning = false;
 let isPaused = false;
 let cameraX = 0, cameraY = 0;

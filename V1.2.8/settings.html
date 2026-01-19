@@ -856,6 +856,9 @@
         
         // Update all range value displays
         updateAllRangeValues();
+        updateRangeValue("masterVolume");
+        updateRangeValue("musicVolume");
+        updateRangeValue("soundEffectsVolume");
         
       } catch (e) {
         console.error("Failed to load settings:", e);
