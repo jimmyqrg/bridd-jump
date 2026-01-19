@@ -45,7 +45,7 @@ const baseVolumes = {
   healthIncreaseCollect: 0.7,
   minusCollect: 0.7,
   supportCollect: 0.7,
-  speedUpCollect: 0.7,
+  speedUpCollect: 0.9,
   speedUp: 0.7,
   speedUpLoop: 0.6
 };
