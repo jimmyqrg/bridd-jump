@@ -4109,6 +4109,80 @@ function findNearestSafeGround() {
   return nearestPlatform;
 }
 
+function isPlatformSafe(plat) {
+  for(const spike of spikes) {
+    const spikeCenterX = spike.x + spike.width / 2;
+    const spikeTopY = spike.baseY;
+    const spikePlatformY = spikeTopY + BLOCK_SIZE * 0.8; // baseY + (1 - 0.2) * block
+    const onSameRow = Math.abs(spikePlatformY - plat.y) < 1;
+    const withinPlatform = spikeCenterX >= plat.x && spikeCenterX <= plat.x + plat.width;
+    if(onSameRow && withinPlatform) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function findSafestGround() {
+  let nearestSafe = null;
+  let minSafeDistance = Infinity;
+  for(const plat of platforms) {
+    if(!isPlatformSafe(plat)) continue;
+    if(plat.y > player.y && plat.x <= player.x + player.width && plat.x + plat.width >= player.x) {
+      const distance = plat.y - player.y;
+      if(distance < minSafeDistance) {
+        minSafeDistance = distance;
+        nearestSafe = plat;
+      }
+    }
+  }
+
+  if(!nearestSafe) {
+    for(const plat of platforms) {
+      if(!isPlatformSafe(plat)) continue;
+      const distance = Math.sqrt(Math.pow(plat.x - player.x, 2) + Math.pow(plat.y - player.y, 2));
+      if(distance < minSafeDistance) {
+        minSafeDistance = distance;
+        nearestSafe = plat;
+      }
+    }
+  }
+
+  return nearestSafe || findNearestSafeGround();
+}
+
+function snapCameraToPlayer() {
+  if(!player.visible) return;
+  let targetCamX = player.x - 150;
+  let targetCamY = player.y - canvas.height/2 + player.height*1.5;
+  if(winSequence.active) {
+    targetCamX = player.x - canvas.width/2 + player.width/2;
+    if(winSequence.phase === 'zoomOut' || winSequence.phase === 'done') {
+      targetCamY = player.y - canvas.height + player.height + BLOCK_SIZE;
+    } else {
+      targetCamY = player.y - canvas.height/2 + player.height/2;
+    }
+  }
+  cameraX = targetCamX;
+  cameraY = targetCamY;
+}
+
+function teleportToSafeGround() {
+  const safeGround = findSafestGround();
+  if(safeGround) {
+    player.x = safeGround.x + safeGround.width / 2 - player.width / 2;
+    player.y = safeGround.y - player.height;
+    player.vy = 0;
+    player.onGround = true;
+    player.jumpsLeft = 2;
+  } else {
+    player.x = 100;
+    player.y = canvas.height/2 - player.height;
+    player.vy = 0;
+  }
+  snapCameraToPlayer();
+}
+
 // Function to handle spike damage
 function takeSpikeDamage(spike) {
   if(!player.visible) return;
@@ -4179,20 +4253,7 @@ function takeVoidDamage() {
   
   // If player is immune (from spike or void damage), teleport/pause/reset but don't extend immunity
   if(player.isImmune) {
-    // Teleport to nearest safe ground
-    const safeGround = findNearestSafeGround();
-    if(safeGround) {
-      player.x = safeGround.x + safeGround.width / 2 - player.width / 2;
-      player.y = safeGround.y - player.height;
-      player.vy = 0;
-      player.onGround = true;
-      player.jumpsLeft = 2;
-    } else {
-      // If no safe ground found, reset to starting position
-      player.x = 100;
-      player.y = canvas.height/2 - player.height;
-      player.vy = 0;
-    }
+    teleportToSafeGround();
     
     // Reset speed to starting speed
     player.speed = player.startingSpeed;
@@ -4233,19 +4294,7 @@ function takeVoidDamage() {
   player.currentHP -= spikeDamage;
   
   // Teleport to nearest safe ground
-  const safeGround = findNearestSafeGround();
-  if(safeGround) {
-    player.x = safeGround.x + safeGround.width / 2 - player.width / 2;
-    player.y = safeGround.y - player.height;
-    player.vy = 0;
-    player.onGround = true;
-    player.jumpsLeft = 2;
-  } else {
-    // If no safe ground found, reset to starting position
-    player.x = 100;
-    player.y = canvas.height/2 - player.height;
-    player.vy = 0;
-  }
+  teleportToSafeGround();
   
   // Clear all spikes
   spikes = [];
@@ -4923,10 +4972,34 @@ document.getElementById('howToPlayBtn').addEventListener('click', () => {
   document.getElementById('howToPlayModal').classList.add('show');
 });
 
-// Close modal when clicking outside (optional)
+function closeHowToPlay() {
+  const modal = document.getElementById('howToPlayModal');
+  if(modal) modal.classList.remove('show');
+}
+
+const howToPlayCloseX = document.getElementById('howToPlayCloseX');
+if(howToPlayCloseX) {
+  howToPlayCloseX.addEventListener('click', () => {
+    playSound('menuClick');
+    closeHowToPlay();
+  });
+}
+
+// Close modal when clicking outside (overlay)
 document.getElementById('howToPlayModal').addEventListener('click', (e) => {
   if(e.target.id === 'howToPlayModal') {
-    document.getElementById('howToPlayModal').classList.remove('show');
+    closeHowToPlay();
+  }
+});
+
+// Close modal on Escape
+document.addEventListener('keydown', (e) => {
+  if(e.code === 'Escape') {
+    const modal = document.getElementById('howToPlayModal');
+    if(modal && modal.classList.contains('show')) {
+      playSound('menuClick');
+      closeHowToPlay();
+    }
   }
 });
 

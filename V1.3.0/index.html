@@ -336,9 +336,20 @@
   /* How to Play Modal */
   #howToPlayModal {
     position: fixed;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1400;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  #howToPlayModal.show {
+    display: flex;
+  }
+  
+  #howToPlayContent {
+    position: relative;
     width: 600px;
     max-width: 90vw;
     max-height: 80vh;
@@ -349,94 +360,113 @@
     box-shadow: 
       0 0 30px var(--accent-glow),
       inset 0 0 30px rgba(0, 255, 255, 0.1);
-    z-index: 1400;
-    display: none;
+    display: flex;
     flex-direction: column;
     gap: 20px;
     overflow-y: auto;
     animation: menuFadeIn 0.4s ease-out;
   }
   
-  #howToPlayModal.show {
-    display: flex;
-  }
-  
-  #howToPlayModal h2 {
+  #howToPlayContent h2 {
     font-size: 18px;
     color: var(--accent);
     text-align: center;
     margin-bottom: 8px;
   }
   
-  #howToPlayModal .section {
+  #howToPlayContent .section {
     margin-bottom: 16px;
   }
   
-  #howToPlayModal .section-title {
+  #howToPlayContent .section-title {
     font-size: 12px;
     color: var(--accent);
     margin-bottom: 8px;
     text-decoration: underline;
   }
   
-  #howToPlayModal .section-content {
+  #howToPlayContent .section-content {
     font-size: 9px;
     color: var(--muted);
     line-height: 1.6;
     margin-left: 8px;
   }
   
-  #howToPlayModal .section-content ul {
+  #howToPlayContent .section-content ul {
     list-style: none;
     padding-left: 0;
     margin: 4px 0;
   }
   
-  #howToPlayModal .section-content li {
+  #howToPlayContent .section-content li {
     margin: 4px 0;
     padding-left: 16px;
     position: relative;
   }
   
-  #howToPlayModal .section-content li::before {
+  #howToPlayContent .section-content li::before {
     content: '•';
     position: absolute;
     left: 0;
     color: var(--accent);
   }
 
-  #howToPlayModal .bobble-grid {
+  #howToPlayContent .bobble-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px 16px;
   }
-  #howToPlayModal .bobble-item {
+  #howToPlayContent .bobble-item {
     display: flex;
     align-items: center;
     gap: 8px;
   }
-  #howToPlayModal .bobble-item img {
+  #howToPlayContent .bobble-item img {
     width: 24px;
     height: 24px;
     image-rendering: pixelated;
   }
   
-  #howToPlayModal .closeBtn {
+  #howToPlayContent .closeBtn {
     margin-top: 8px;
     align-self: center;
   }
   
-  #howToPlayModal::-webkit-scrollbar {
+  #howToPlayContent::-webkit-scrollbar {
     width: 8px;
   }
   
-  #howToPlayModal::-webkit-scrollbar-track {
+  #howToPlayContent::-webkit-scrollbar-track {
     background: rgba(0, 255, 255, 0.1);
   }
   
-  #howToPlayModal::-webkit-scrollbar-thumb {
+  #howToPlayContent::-webkit-scrollbar-thumb {
     background: var(--accent);
     border: 2px solid #000;
+  }
+
+  #howToPlayCloseX {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 34px;
+    height: 34px;
+    border: 3px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    font-family: "Press Start 2P", monospace;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+  }
+  
+  #howToPlayCloseX:hover {
+    color: #000;
+    background: var(--accent);
+    box-shadow: 0 0 20px var(--accent-glow);
   }
   
   /* Code Editor Modal */
@@ -890,6 +920,8 @@
 
   <!-- How to Play Modal -->
   <div id="howToPlayModal">
+    <div id="howToPlayContent">
+    <button id="howToPlayCloseX" aria-label="Close">X</button>
     <h2>HOW TO PLAY</h2>
     
     <div class="section">
@@ -939,7 +971,8 @@
       </div>
     </div>
     
-    <button class="btn closeBtn" onclick="if(typeof playSound === 'function') playSound('menuClick'); document.getElementById('howToPlayModal').classList.remove('show')">CLOSE</button>
+    <button class="btn closeBtn" onclick="if(typeof playSound === 'function') playSound('menuClick'); closeHowToPlay();">CLOSE</button>
+    </div>
   </div>
 
   <!-- Code Editor Modal -->
