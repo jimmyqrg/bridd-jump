@@ -2857,6 +2857,70 @@ function updateDeathVapors(){
   }
 }
 
+function updateTrailEffect(){
+  if(player.visible && runtime.trailEnabled && !player.isImmune){
+    // Add new trail position (don't generate trails during immunity)
+    trail.push({
+      x: player.x,
+      y: player.y,
+      width: player.width,
+      height: player.height,
+      color: player.color,
+      age: 0, // Start at age 0
+      alpha: 0.6 // Start with some transparency
+    });
+
+    // Update ages and alpha of existing trails
+    for(let i = 0; i < trail.length; i++) {
+      const t = trail[i];
+      t.age++;
+
+      // Smooth fade over time - decrease alpha gradually
+      // Start fading after 3 ticks, fade over 20 ticks total
+      if(t.age > 3) {
+        const fadeProgress = (t.age - 3) / 20;
+        t.alpha = 0.6 * (1 - fadeProgress); // Linear fade from 0.6 to 0
+      }
+    }
+
+    // Remove trails that are completely faded
+    for(let i = trail.length - 1; i >= 0; i--) {
+      if(trail[i].alpha <= 0.01) {
+        trail.splice(i, 1);
+      }
+    }
+
+    // Keep reasonable trail length for performance
+    const maxTrailLen = Math.max(8, Math.floor(25 * runtime.effects.trailMul));
+    if(trail.length > maxTrailLen) {
+      // Remove oldest trails
+      const toRemove = trail.length - maxTrailLen;
+      trail.splice(0, toRemove);
+    }
+  }
+}
+
+function updateCameraTick(){
+  // Camera smoothing uses fixed tick rate for consistent speed
+  // When player is dead, keep camera where it is
+  if(!player.visible) return;
+
+  let targetCamX = player.x - 150;
+  let targetCamY = player.y - canvas.height/2 + player.height*1.5;
+  if(winSequence.active) {
+    targetCamX = player.x - canvas.width/2 + player.width/2;
+    if(winSequence.phase === 'zoomOut' || winSequence.phase === 'done') {
+      targetCamY = player.y - canvas.height + player.height + BLOCK_SIZE;
+    } else {
+      targetCamY = player.y - canvas.height/2 + player.height/2;
+    }
+  }
+
+  const smoothingFactor = 0.1; // Equivalent to 60 FPS cadence
+  cameraX = cameraX * (1 - smoothingFactor) + targetCamX * smoothingFactor;
+  cameraY = cameraY * (1 - smoothingFactor) + targetCamY * smoothingFactor;
+}
+
 function drawDeathVapors(){
   if(deathVapors.length === 0) return;
   ctx.save();
@@ -3883,6 +3947,8 @@ function gameTick() {
   updateDeathImplosions();
   updateDeathGlitches();
   updateDeathVapors();
+  updateTrailEffect();
+  updateCameraTick();
   applyTimeDilation();
 
   // update crash pieces with enhanced physics
@@ -4442,45 +4508,6 @@ function draw(){
 
   /* ---------- TRAIL EFFECT ---------- */
   if(player.visible && runtime.trailEnabled && !player.isImmune){
-    // Add new trail position (don't generate trails during immunity)
-    trail.push({ 
-      x: player.x, 
-      y: player.y, 
-      width: player.width, 
-      height: player.height, 
-      color: player.color,
-      age: 0, // Start at age 0
-      alpha: 0.6 // Start with some transparency
-    });
-    
-    // Update ages and alpha of existing trails
-    for(let i = 0; i < trail.length; i++) {
-      const t = trail[i];
-      t.age++;
-      
-      // Smooth fade over time - decrease alpha gradually
-      // Start fading after 3 ticks, fade over 30 ticks total
-      if(t.age > 3) {
-        const fadeProgress = (t.age - 3) / 20;
-        t.alpha = 0.6 * (1 - fadeProgress); // Linear fade from 0.6 to 0
-      }
-    }
-    
-    // Remove trails that are completely faded
-    for(let i = trail.length - 1; i >= 0; i--) {
-      if(trail[i].alpha <= 0.01) {
-        trail.splice(i, 1);
-      }
-    }
-    
-    // Keep reasonable trail length for performance
-    const maxTrailLen = Math.max(8, Math.floor(25 * runtime.effects.trailMul));
-    if(trail.length > maxTrailLen) {
-      // Remove oldest trails
-      const toRemove = trail.length - maxTrailLen;
-      trail.splice(0, toRemove);
-    }
-    
     // Draw trails with smooth fade
     for(let i = 0; i < trail.length; i++) {
       const t = trail[i];
@@ -4728,11 +4755,15 @@ function mainLoop(now){
     frameCount = 0;
   }
 
-  // FPS limiting for rendering
+  // FPS limiting for rendering (ticks should still run)
+  let shouldRender = true;
   if(runtime.minFrameTime > 0){
     accumulated += cappedDeltaMs;
-    if(accumulated < runtime.minFrameTime) return;
-    accumulated = 0;
+    if(accumulated < runtime.minFrameTime) {
+      shouldRender = false;
+    } else {
+      accumulated = 0;
+    }
   }
 
   // Fixed tick system: always run at 60 TPS regardless of FPS
@@ -4758,26 +4789,7 @@ function mainLoop(now){
     tickAccumulator = TICK_INTERVAL; // Keep some buffer
   }
 
-  // Camera smoothing - use actual delta time for smoothness
-  // When player is dead, smoothly stop camera movement instead of following
-  if(player.visible) {
-    let targetCamX = player.x - 150;
-    let targetCamY = player.y - canvas.height/2 + player.height*1.5;
-    if(winSequence.active) {
-      targetCamX = player.x - canvas.width/2 + player.width/2;
-      if(winSequence.phase === 'zoomOut' || winSequence.phase === 'done') {
-        targetCamY = player.y - canvas.height + player.height + BLOCK_SIZE;
-      } else {
-        targetCamY = player.y - canvas.height/2 + player.height/2;
-      }
-    }
-    const smoothingFactor = 0.1 * (cappedDeltaMs / 16.67); // Adjust for frame rate
-    cameraX = cameraX * (1 - smoothingFactor) + targetCamX * smoothingFactor;
-    cameraY = cameraY * (1 - smoothingFactor) + targetCamY * smoothingFactor;
-  } else {
-    // Gradually stop camera movement when player is dead (keep current position)
-    // Camera stays where it is, no further movement
-  }
+  if(!shouldRender) return;
 
   // Draw (rendering at monitor refresh rate)
   draw();
