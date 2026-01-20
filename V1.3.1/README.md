@@ -1,5 +1,5 @@
 # V1.3.1
-## Type: Release
+## Type: Update
 
 Updates:
 

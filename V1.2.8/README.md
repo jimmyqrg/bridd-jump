@@ -8,4 +8,5 @@
     <li>Fix music volume settings</li>
     <li>Update how to play</li>
     <li>Fix settings UI</li>
+    <li>Fix frame rate&fps</li>
 </ol>
