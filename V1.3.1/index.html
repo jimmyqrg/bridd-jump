@@ -902,73 +902,6 @@
     overflow: auto;
   }
 
-  /* Keyboard settings (desktop only) */
-  #keyboardSettings {
-    display: none;
-    width: 100%;
-    margin-top: 8px;
-    border-top: 2px solid rgba(0, 255, 255, 0.3);
-    padding-top: 12px;
-    gap: 10px;
-    flex-direction: column;
-  }
-
-  #keyboardSettingsTitle {
-    font-size: 10px;
-    color: var(--muted);
-    text-align: center;
-  }
-
-  .keyBox {
-    border: 3px solid var(--accent);
-    padding: 10px;
-    width: 100%;
-    max-width: 360px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    background: rgba(0, 0, 0, 0.4);
-  }
-
-  .keyBoxLabel {
-    font-size: 10px;
-    color: var(--accent);
-    text-align: left;
-  }
-
-  .keyList {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  .keyBlock {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 8px;
-    border: 2px solid var(--accent);
-    color: var(--accent);
-    font-size: 9px;
-    background: #000;
-  }
-
-  .keyBlockRemove {
-    cursor: pointer;
-    font-size: 10px;
-    color: #ff6666;
-  }
-
-  .keyAdd {
-    border-style: dashed;
-    cursor: pointer;
-  }
-
-  .keyAdd.recording {
-    color: #000;
-    background: var(--accent);
-  }
-
 
   /* Mobile friendly */
   @media (max-width: 560px) {
@@ -994,17 +927,6 @@
     <button id="howToPlayBtn" class="btn">HOW TO PLAY</button>
         <button onclick="if(typeof playSound === 'function') playSound('menuClick'); openCodeViewer();" class="btn">CODE</button>
     <button onclick="if(typeof playSound === 'function') playSound('menuClick'); window.location.href='../';" class="btn">HOME</button>
-    <div id="keyboardSettings">
-      <div id="keyboardSettingsTitle">KEYBOARD SETTINGS</div>
-      <div class="keyBox">
-        <div class="keyBoxLabel">JUMP KEY</div>
-        <div class="keyList" id="jumpKeyList"></div>
-      </div>
-      <div class="keyBox">
-        <div class="keyBoxLabel">DROP KEY</div>
-        <div class="keyList" id="dropKeyList"></div>
-      </div>
-    </div>
   </div>
 
   <!-- How to Play Modal -->

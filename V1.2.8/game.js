@@ -378,6 +378,7 @@ if(bestScore === 0) {
 }
 let gameRunning = false;
 let isPaused = false;
+  resumeMusicAfterPause();
 let cameraX = 0, cameraY = 0;
 let spikeDamage = 1; // Damage per spike hit (increases with score)
 let maxMaxHP = Infinity; // Maximum allowed maxHP (decreases with high scores)
@@ -4930,9 +4931,36 @@ document.getElementById('howToPlayModal').addEventListener('click', (e) => {
 });
 
 /* ---------- Pause Screen Functions ---------- */
+
+let pausedMusicState = null;
+function pauseMusicForPause() {
+  if(!soundEnabled) return;
+  pausedMusicState = {
+    background: !!(sounds.background && !sounds.background.paused),
+    speedUp: !!(sounds.speedUp && !sounds.speedUp.paused),
+    speedUpLoop: !!(sounds.speedUpLoop && !sounds.speedUpLoop.paused)
+  };
+  if(pausedMusicState.background && sounds.background) sounds.background.pause();
+  if(pausedMusicState.speedUp && sounds.speedUp) sounds.speedUp.pause();
+  if(pausedMusicState.speedUpLoop && sounds.speedUpLoop) sounds.speedUpLoop.pause();
+}
+
+function resumeMusicAfterPause() {
+  if(!soundEnabled || !pausedMusicState) return;
+  if(pausedMusicState.speedUp && sounds.speedUp) {
+    sounds.speedUp.play().catch(()=>{});
+  } else if(pausedMusicState.speedUpLoop && sounds.speedUpLoop) {
+    sounds.speedUpLoop.play().catch(()=>{});
+  } else if(pausedMusicState.background && sounds.background) {
+    sounds.background.play().catch(()=>{});
+  }
+  pausedMusicState = null;
+}
+
 function pauseGame() {
   if(!gameRunning || isPaused) return; // Don't pause if game isn't running or already paused
   isPaused = true;
+  pauseMusicForPause();
   const pauseScreen = document.getElementById('pauseScreen');
   if(pauseScreen) {
     pauseScreen.classList.add('show');

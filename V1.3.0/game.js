@@ -379,6 +379,7 @@ if(bestScore === 0) {
 }
 let gameRunning = false;
 let isPaused = false;
+  resumeMusicAfterPause();
 let cameraX = 0, cameraY = 0;
 let spikeDamage = 1; // Damage per spike hit (increases with score)
 let maxMaxHP = Infinity; // Maximum allowed maxHP (decreases with high scores)
@@ -2906,6 +2907,11 @@ function updateTrailEffect(){
 function updateCameraTick(){
   // Camera smoothing uses fixed tick rate for consistent speed
   // When player is dead, keep camera where it is
+  if(voidDamagePause) {
+    cameraX = pauseCameraX;
+    cameraY = pauseCameraY;
+    return;
+  }
   if(!player.visible) return;
 
   let targetCamX = player.x - 150;
@@ -2980,6 +2986,7 @@ let mousePressed = false;
 let touchPressed = false;
 
 window.addEventListener('keydown', e => {
+  if(!gameRunning || isPaused || voidDamagePause) return;
   keys[e.code] = true;
   const isJumpKey = ["KeyW","ArrowUp","Space"].includes(e.code);
   const isDropKey = ["ArrowDown","KeyS"].includes(e.code);
@@ -3022,6 +3029,7 @@ window.addEventListener('keyup', e => {
   }
 });
 window.addEventListener('mousedown', () => {
+  if(!gameRunning || isPaused || voidDamagePause) return;
   if(!mousePressed) {
     mousePressed = true;
     jump();
@@ -3031,6 +3039,7 @@ window.addEventListener('mouseup', () => {
   mousePressed = false;
 });
 window.addEventListener('touchstart', (e) => {
+  if(!gameRunning || isPaused || voidDamagePause) return;
   if(!touchPressed) {
     touchPressed = true;
     touchStartY = e.touches[0].clientY;
@@ -3041,6 +3050,7 @@ window.addEventListener('touchstart', (e) => {
   }
 });
 window.addEventListener('touchmove', (e) => {
+  if(!gameRunning || isPaused || voidDamagePause) return;
   if(touchStartY !== null && touchPressed) {
     const currentY = e.touches[0].clientY;
     const deltaY = currentY - touchStartY;
@@ -4996,9 +5006,36 @@ document.addEventListener('keydown', (e) => {
 });
 
 /* ---------- Pause Screen Functions ---------- */
+
+let pausedMusicState = null;
+function pauseMusicForPause() {
+  if(!soundEnabled) return;
+  pausedMusicState = {
+    background: !!(sounds.background && !sounds.background.paused),
+    speedUp: !!(sounds.speedUp && !sounds.speedUp.paused),
+    speedUpLoop: !!(sounds.speedUpLoop && !sounds.speedUpLoop.paused)
+  };
+  if(pausedMusicState.background && sounds.background) sounds.background.pause();
+  if(pausedMusicState.speedUp && sounds.speedUp) sounds.speedUp.pause();
+  if(pausedMusicState.speedUpLoop && sounds.speedUpLoop) sounds.speedUpLoop.pause();
+}
+
+function resumeMusicAfterPause() {
+  if(!soundEnabled || !pausedMusicState) return;
+  if(pausedMusicState.speedUp && sounds.speedUp) {
+    sounds.speedUp.play().catch(()=>{});
+  } else if(pausedMusicState.speedUpLoop && sounds.speedUpLoop) {
+    sounds.speedUpLoop.play().catch(()=>{});
+  } else if(pausedMusicState.background && sounds.background) {
+    sounds.background.play().catch(()=>{});
+  }
+  pausedMusicState = null;
+}
+
 function pauseGame() {
   if(!gameRunning || isPaused) return; // Don't pause if game isn't running or already paused
   isPaused = true;
+  pauseMusicForPause();
   const pauseScreen = document.getElementById('pauseScreen');
   if(pauseScreen) {
     pauseScreen.classList.add('show');

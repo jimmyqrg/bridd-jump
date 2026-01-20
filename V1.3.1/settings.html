@@ -371,6 +371,72 @@
       background: rgba(255, 0, 0, 0.1);
       border-left: 3px solid #ff0000;
     }
+
+    /* Keyboard settings (desktop only) */
+    #keyboardSettingsContainer {
+      display: none;
+      margin-top: 12px;
+    }
+
+    .keyBox {
+      border: 3px solid var(--accent);
+      padding: 10px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.4);
+    }
+
+    .keyBoxLabel {
+      font-size: 10px;
+      color: var(--accent);
+      text-align: left;
+    }
+
+    .keyList {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .keyBlock {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      border: 2px solid var(--accent);
+      color: var(--accent);
+      font-size: 9px;
+      background: #000;
+    }
+
+    .keyBlockRemove {
+      cursor: pointer;
+      color: var(--accent);
+      width: 12px;
+      height: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .keyBlockRemove svg {
+      width: 10px;
+      height: 10px;
+      display: block;
+      fill: currentColor;
+    }
+
+    .keyAdd {
+      border-style: dashed;
+      cursor: pointer;
+    }
+
+    .keyAdd.recording {
+      color: #000;
+      background: var(--accent);
+    }
   
   /* Mobile friendly */
   @media (max-width: 560px) {
@@ -469,6 +535,18 @@
             <input type="checkbox" id="blockTexture" checked>
             Enable Block Texture
           </label>
+        </div>
+
+        <div class="settings-section" id="keyboardSettingsContainer">
+          <div class="section-title">Keyboard Settings</div>
+          <div class="keyBox">
+            <div class="keyBoxLabel">JUMP KEY</div>
+            <div class="keyList" id="jumpKeyList"></div>
+          </div>
+          <div class="keyBox" style="margin-top: 10px;">
+            <div class="keyBoxLabel">DROP KEY</div>
+            <div class="keyList" id="dropKeyList"></div>
+          </div>
         </div>
 
         <label>Jump Particles</label>
@@ -689,10 +767,130 @@
 
   <script>
     // Load settings from localStorage with the correct key
+    const defaultKeybinds = {
+      jump: ["KeyW", "ArrowUp", "Space"],
+      drop: ["KeyS", "ArrowDown", "ShiftLeft", "ShiftRight"]
+    };
+    let keybindRecording = null;
+    let currentKeybinds = JSON.parse(JSON.stringify(defaultKeybinds));
+
+    function normalizeKeyList(list) {
+      if(!Array.isArray(list)) return [];
+      const cleaned = list.filter(Boolean);
+      return Array.from(new Set(cleaned));
+    }
+
+    function keyToLabel(code) {
+      if(code.startsWith('Key')) return code.slice(3).toUpperCase();
+      if(code.startsWith('Digit')) return code.slice(5);
+      if(code.startsWith('Numpad')) return code.replace('Numpad', 'NUM ');
+      if(code.startsWith('Arrow')) return code.replace('Arrow', '').toUpperCase() + ' ARROW';
+      if(code === 'Space') return 'SPACE';
+      if(code === 'ShiftLeft' || code === 'ShiftRight') return 'SHIFT';
+      if(code === 'ControlLeft' || code === 'ControlRight') return 'CTRL';
+      if(code === 'AltLeft' || code === 'AltRight') return 'ALT';
+      if(code === 'MetaLeft' || code === 'MetaRight') return 'COMMAND';
+      if(code === 'Enter') return 'ENTER';
+      if(code === 'Backspace') return 'BACKSPACE';
+      if(code === 'Tab') return 'TAB';
+      if(code === 'Escape') return 'ESC';
+      if(code.startsWith('Mouse')) return code.replace('Mouse', 'MOUSE-');
+      return code.toUpperCase();
+    }
+
+    function hasKeyboard() {
+      if (window.matchMedia && window.matchMedia('(pointer: fine)').matches) {
+        return true;
+      }
+      return !('ontouchstart' in window) || window.navigator.maxTouchPoints === 0;
+    }
+
+    function renderKeybindsUI() {
+      const jumpListEl = document.getElementById('jumpKeyList');
+      const dropListEl = document.getElementById('dropKeyList');
+      if(!jumpListEl || !dropListEl) return;
+
+      const renderList = (el, keys, type) => {
+        el.innerHTML = '';
+        for(const code of keys) {
+          const block = document.createElement('div');
+          block.className = 'keyBlock';
+          const label = document.createElement('span');
+          label.textContent = keyToLabel(code);
+          const remove = document.createElement('span');
+          remove.className = 'keyBlockRemove';
+          remove.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.3 5.7L12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7 2.9 18.3 9.2 12 2.9 5.7 4.3 4.3l6.3 6.3 6.3-6.3z"/></svg>';
+          remove.addEventListener('click', () => {
+            currentKeybinds[type] = normalizeKeyList(currentKeybinds[type].filter(k => k !== code));
+            renderKeybindsUI();
+          });
+          block.appendChild(label);
+          block.appendChild(remove);
+          el.appendChild(block);
+        }
+
+        const addBlock = document.createElement('div');
+        addBlock.className = 'keyBlock keyAdd' + (keybindRecording === type ? ' recording' : '');
+        addBlock.textContent = keybindRecording === type ? 'PRESS KEY...' : 'ADD +';
+        addBlock.addEventListener('click', () => {
+          keybindRecording = type;
+          renderKeybindsUI();
+        });
+        el.appendChild(addBlock);
+      };
+
+      renderList(jumpListEl, currentKeybinds.jump, 'jump');
+      renderList(dropListEl, currentKeybinds.drop, 'drop');
+    }
+
+    function cancelKeybindRecording() {
+      keybindRecording = null;
+      renderKeybindsUI();
+    }
+
+    function addKeybind(type, code) {
+      if(code === 'Escape') {
+        cancelKeybindRecording();
+        return;
+      }
+      const otherType = type === 'jump' ? 'drop' : 'jump';
+      const updated = normalizeKeyList(currentKeybinds[type]);
+      if(!updated.includes(code)) updated.push(code);
+      currentKeybinds[type] = updated;
+      currentKeybinds[otherType] = normalizeKeyList(currentKeybinds[otherType].filter(k => k !== code));
+      keybindRecording = null;
+      renderKeybindsUI();
+    }
+
+    function initKeyboardSettingsUI(saved) {
+      const container = document.getElementById('keyboardSettingsContainer');
+      if(!container) return;
+      if(!hasKeyboard()) {
+        container.style.display = 'none';
+        return;
+      }
+      container.style.display = 'block';
+      const keybinds = saved && saved.keybinds ? saved.keybinds : defaultKeybinds;
+      currentKeybinds = {
+        jump: normalizeKeyList(keybinds.jump || defaultKeybinds.jump),
+        drop: normalizeKeyList(keybinds.drop || defaultKeybinds.drop)
+      };
+      renderKeybindsUI();
+    }
     function loadSettings() {
       try {
         const saved = localStorage.getItem("briddSettings");
-        if (!saved) return;
+        if (!saved) {
+          initKeyboardSettingsUI(null);
+          const showKeyboardContainer = document.getElementById("showKeyboardContainer");
+          if (showKeyboardContainer) {
+            showKeyboardContainer.style.display = hasKeyboard() ? "block" : "none";
+            if (hasKeyboard()) {
+              document.getElementById("showKeyboard").checked = true;
+            }
+          }
+          return;
+        }
         
         const settings = JSON.parse(saved);
         
@@ -723,14 +921,6 @@
           document.getElementById("soundEffectsVolumeValue").textContent = "100%";
         }
         
-        // Show keyboard checkbox (only show if device has keyboard)
-        function hasKeyboard() {
-          if (window.matchMedia && window.matchMedia('(pointer: fine)').matches) {
-            return true;
-          }
-          return !('ontouchstart' in window) || window.navigator.maxTouchPoints === 0;
-        }
-        
         const showKeyboardContainer = document.getElementById("showKeyboardContainer");
         if (showKeyboardContainer) {
           if (hasKeyboard()) {
@@ -740,6 +930,8 @@
             showKeyboardContainer.style.display = "none";
           }
         }
+        
+        initKeyboardSettingsUI(settings);
         
         // Set basic effects if they exist
         if (settings.quality) {
@@ -1351,6 +1543,7 @@
         maxFPS: parseInt(document.getElementById("fps").value) || 0,
         qualityPreset: document.getElementById("quality").value === "Custom" ? "Extreme+" : document.getElementById("quality").value,
         showKeyboard: document.getElementById("showKeyboard") ? document.getElementById("showKeyboard").checked : true,
+        keybinds: currentKeybinds,
         volume: {
           master: Number.isFinite(masterVol) ? masterVol : 100,
           music: Number.isFinite(musicVol) ? musicVol : 50,
@@ -1440,6 +1633,25 @@
     // Cancel button - just go back without saving
     document.getElementById("cancelBtn").addEventListener("click", function() {
       window.location.href = "index.html";
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if(!keybindRecording) return;
+      e.preventDefault();
+      addKeybind(keybindRecording, e.code);
+    });
+
+    document.addEventListener('mousedown', (e) => {
+      if(!keybindRecording) return;
+      e.preventDefault();
+      const mouseCode = `Mouse${e.button + 1}`;
+      addKeybind(keybindRecording, mouseCode);
+    });
+
+    document.addEventListener('contextmenu', (e) => {
+      if(keybindRecording) {
+        e.preventDefault();
+      }
     });
 
     // Load settings on page load
