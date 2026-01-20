@@ -299,7 +299,7 @@ let shieldBreakBursts = []; // Burst effect for shield break
 let keys = {}, score = 0, bestScore = localStorage.getItem("bestScore") ? parseInt(localStorage.getItem("bestScore")) : 0;
 let gameRunning = false;
 let isPaused = false;
-  resumeMusicAfterPause();
+let pausedMusicState = null; // Tracks music state when paused
 let cameraX = 0, cameraY = 0;
 let spikeDamage = 1; // Damage per spike hit (increases with score)
 let maxMaxHP = Infinity; // Maximum allowed maxHP (decreases with high scores)
@@ -4814,8 +4814,6 @@ document.getElementById('howToPlayModal').addEventListener('click', (e) => {
 });
 
 /* ---------- Pause Screen Functions ---------- */
-
-let pausedMusicState = null;
 function pauseMusicForPause() {
   if(!soundEnabled) return;
   pausedMusicState = {
@@ -4854,6 +4852,7 @@ function unpauseGame() {
   if(!isPaused) return; // Don't unpause if not paused
   playSound('menuClick');
   isPaused = false;
+  resumeMusicAfterPause(); // Resume music that was paused
   
   // Reset time tracking to prevent lag when resuming
   lastLoopTime = performance.now();

@@ -371,27 +371,28 @@
       background: rgba(255, 0, 0, 0.1);
       border-left: 3px solid #ff0000;
     }
-
-    /* Keyboard settings (desktop only) */
-    #keyboardSettingsContainer {
-      display: none;
-      margin-top: 12px;
-    }
+  
+  /* Mobile friendly */
+  @media (max-width: 560px) {
+    body { padding: 10px; }
+    .container { width: 92vw; max-width: none; padding: 20px; max-height: 92vh; }
+    h1 { font-size: 18px; }
+    label { font-size: 9px; }
+    select, input[type=range], button { font-size: 10px; }
+  }
 
     .keyBox {
-      border: 3px solid var(--accent);
-      padding: 10px;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+      margin: 12px 0;
+      padding: 12px;
       background: rgba(0, 0, 0, 0.4);
+      border: 2px solid var(--accent);
     }
 
     .keyBoxLabel {
       font-size: 10px;
       color: var(--accent);
       text-align: left;
+      margin-bottom: 8px;
     }
 
     .keyList {
@@ -535,18 +536,6 @@
             <input type="checkbox" id="blockTexture" checked>
             Enable Block Texture
           </label>
-        </div>
-
-        <div class="settings-section" id="keyboardSettingsContainer">
-          <div class="section-title">Keyboard Settings</div>
-          <div class="keyBox">
-            <div class="keyBoxLabel">JUMP KEY</div>
-            <div class="keyList" id="jumpKeyList"></div>
-          </div>
-          <div class="keyBox" style="margin-top: 10px;">
-            <div class="keyBoxLabel">DROP KEY</div>
-            <div class="keyList" id="dropKeyList"></div>
-          </div>
         </div>
 
         <label>Jump Particles</label>
@@ -756,6 +745,18 @@
         <label>Ambient Occlusion</label>
         <input type="range" id="ambientOcclusion" min="0" max="200" value="100">
         <div class="range-value" id="ambientOcclusionVal">100%</div>
+      </div>
+    </div>
+
+    <div class="settings-section" id="keyboardSettingsContainer">
+      <div class="section-title">Keyboard Settings</div>
+      <div class="keyBox">
+        <div class="keyBoxLabel">JUMP KEY</div>
+        <div class="keyList" id="jumpKeyList"></div>
+      </div>
+      <div class="keyBox" style="margin-top: 10px;">
+        <div class="keyBoxLabel">DROP KEY</div>
+        <div class="keyList" id="dropKeyList"></div>
       </div>
     </div>
 
@@ -1468,10 +1469,10 @@
       const general = document.getElementById("generalSettings");
       if (general.style.display === "none" || general.style.display === "") {
         general.style.display = "block";
-        this.textContent = "General Effects Settings ▲";
+        this.textContent = "General Visual Settings ▲";
       } else {
         general.style.display = "none";
-        this.textContent = "General Effects Settings ▼";
+        this.textContent = "General Visual Settings ▼";
       }
     });
 

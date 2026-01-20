@@ -25,7 +25,6 @@ const sounds = {
   speedUpLoop: new Audio('../sounds/speed-up-music-loop.mp3')
 };
 
-
 // Set background music to loop
 sounds.background.loop = true;
 
@@ -49,7 +48,6 @@ const baseVolumes = {
   speedUp: 0.7,
   speedUpLoop: 0.7
 };
-
 
 // Function to update all sound volumes based on settings
 function updateSoundVolumes() {
@@ -380,7 +378,7 @@ if(bestScore === 0) {
 }
 let gameRunning = false;
 let isPaused = false;
-  resumeMusicAfterPause();
+let pausedMusicState = null; // Tracks music state when paused
 let cameraX = 0, cameraY = 0;
 let spikeDamage = 1; // Damage per spike hit (increases with score)
 let maxMaxHP = Infinity; // Maximum allowed maxHP (decreases with high scores)
@@ -398,8 +396,7 @@ let voidDamagePause = false; // Pause state for void damage
 let voidPauseTimer = 0; // Timer for void damage pause (in ticks)
 let voidPauseDuration = 3 * TICKS_PER_SECOND; // 3 seconds in ticks
 let shouldExtendImmunity = false; // Whether to extend immunity after void pause ends
-let pauseCameraX = 0;
-let pauseCameraY = 0;
+// Camera variables removed - camera now continues following player during void pause
 
 // Bobble spawning timers (in seconds)
 let bobbleSpawnTimer = 0; // Current timer for good bobbles
@@ -2912,12 +2909,7 @@ function updateTrailEffect(){
 
 function updateCameraTick(){
   // Camera smoothing uses fixed tick rate for consistent speed
-  // When player is dead, keep camera where it is
-  if(voidDamagePause) {
-    cameraX = pauseCameraX;
-    cameraY = pauseCameraY;
-    return;
-  }
+  // Camera continues to follow player during void damage pause (but doesn't snap)
   if(!player.visible) return;
 
   let targetCamX = player.x - 150;
@@ -2931,7 +2923,8 @@ function updateCameraTick(){
     }
   }
 
-  const smoothingFactor = 0.1; // Equivalent to 60 FPS cadence
+  // Use faster smoothing during void damage pause so camera catches up to teleported player
+  const smoothingFactor = voidDamagePause ? 0.25 : 0.1;
   cameraX = cameraX * (1 - smoothingFactor) + targetCamX * smoothingFactor;
   cameraY = cameraY * (1 - smoothingFactor) + targetCamY * smoothingFactor;
 }
@@ -3713,10 +3706,6 @@ function gameTick() {
   
   // Skip if paused (regular pause) or void damage pause
   if(isPaused || voidDamagePause) {
-    if(voidDamagePause) {
-      cameraX = pauseCameraX;
-      cameraY = pauseCameraY;
-    }
     // Update void pause timer and respawn effect
     if(voidDamagePause) {
       voidPauseTimer--;
@@ -4296,8 +4285,7 @@ function findSafestGround() {
 function startVoidPause() {
   voidDamagePause = true;
   voidPauseTimer = voidPauseDuration;
-  pauseCameraX = cameraX;
-  pauseCameraY = cameraY;
+  // Camera will continue to follow player smoothly, no need to lock position
 }
 
 function teleportToSafeGround() {
@@ -4313,6 +4301,13 @@ function teleportToSafeGround() {
     player.y = canvas.height/2 - player.height;
     player.vy = 0;
   }
+  
+  // Move camera closer to player's new position so it can follow smoothly
+  // Instead of instant snap, move camera halfway to target position for smoother transition
+  const targetCamX = player.x - 150;
+  const targetCamY = player.y - canvas.height/2 + player.height*1.5;
+  cameraX = cameraX * 0.3 + targetCamX * 0.7; // Move 70% of the way to target
+  cameraY = cameraY * 0.3 + targetCamY * 0.7;
 }
 
 // Function to handle spike damage
@@ -5133,7 +5128,6 @@ document.addEventListener('keydown', (e) => {
 
 /* ---------- Pause Screen Functions ---------- */
 
-let pausedMusicState = null;
 function pauseMusicForPause() {
   if(!soundEnabled) return;
   pausedMusicState = {
@@ -5172,6 +5166,7 @@ function unpauseGame() {
   if(!isPaused) return; // Don't unpause if not paused
   playSound('menuClick');
   isPaused = false;
+  resumeMusicAfterPause(); // Resume music that was paused
   
   // Reset time tracking to prevent lag when resuming
   lastLoopTime = performance.now();

@@ -160,7 +160,7 @@ let deathImplosions = [], deathGlitches = [], deathVapors = [];
 let keys = {}, score = 0, bestScore = localStorage.getItem("bestScore") ? parseInt(localStorage.getItem("bestScore")) : 0;
 let gameRunning = false;
 let isPaused = false;
-  resumeMusicAfterPause();
+let pausedMusicState = null; // Tracks music state when paused
 let cameraX = 0, cameraY = 0;
 
 /* Tick system */
@@ -3511,7 +3511,6 @@ document.getElementById('howToPlayModal').addEventListener('click', (e) => {
 
 /* ---------- Pause Screen Functions ---------- */
 
-let pausedMusicState = null;
 function pauseMusicForPause() {
   if(!soundEnabled) return;
   pausedMusicState = {
@@ -3550,6 +3549,7 @@ function unpauseGame() {
   if(!isPaused) return; // Don't unpause if not paused
   playSound('menuClick');
   isPaused = false;
+  resumeMusicAfterPause(); // Resume music that was paused
   const pauseScreen = document.getElementById('pauseScreen');
   if(pauseScreen) {
     pauseScreen.classList.remove('show');
